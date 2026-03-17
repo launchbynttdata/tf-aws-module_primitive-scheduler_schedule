@@ -24,3 +24,8 @@ output "name" {
   description = "The name of the schedule."
   value       = aws_scheduler_schedule.schedule.name
 }
+
+output "group_name" {
+  description = "The schedule group name."
+  value       = aws_scheduler_schedule.schedule.group_name
+}

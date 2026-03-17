@@ -133,4 +133,11 @@ resource "aws_scheduler_schedule" "schedule" {
       }
     }
   }
+
+  lifecycle {
+    precondition {
+      condition     = var.name == null || var.name_prefix == null
+      error_message = "Name and name_prefix cannot both be set."
+    }
+  }
 }

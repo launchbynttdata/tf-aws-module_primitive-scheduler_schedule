@@ -27,7 +27,7 @@ output "name" {
 
 output "group_name" {
   description = "The schedule group name."
-  value       = var.group_name
+  value       = module.scheduler_schedule.group_name
 }
 
 output "queue_url" {

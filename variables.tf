@@ -24,11 +24,6 @@ variable "name_prefix" {
   description = "Creates a unique name beginning with the specified prefix. Conflicts with name."
   type        = string
   default     = null
-
-  validation {
-    condition     = var.name == null || var.name_prefix == null
-    error_message = "Name and name_prefix cannot both be set."
-  }
 }
 
 variable "group_name" {
@@ -193,4 +188,14 @@ variable "schedule_target" {
       message_group_id = optional(string)
     }))
   })
+
+  validation {
+    condition     = try(var.schedule_target.retry_policy.maximum_event_age_in_seconds, null) == null ? true : (var.schedule_target.retry_policy.maximum_event_age_in_seconds >= 60 && var.schedule_target.retry_policy.maximum_event_age_in_seconds <= 86400)
+    error_message = "Retry policy maximum_event_age_in_seconds must be between 60 and 86400."
+  }
+
+  validation {
+    condition     = try(var.schedule_target.retry_policy.maximum_retry_attempts, null) == null ? true : (var.schedule_target.retry_policy.maximum_retry_attempts >= 0 && var.schedule_target.retry_policy.maximum_retry_attempts <= 185)
+    error_message = "Retry policy maximum_retry_attempts must be between 0 and 185."
+  }
 }

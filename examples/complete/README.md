@@ -26,10 +26,6 @@ module "resource_names" {
   use_azure_region_abbr = var.use_azure_region_abbr
 }
 
-resource "aws_sqs_queue" "schedule_target" {
-  name = module.resource_names["sqsqueue"].standard
-}
-
 resource "aws_iam_role" "scheduler" {
   name = module.resource_names["iamrole"].standard
 
@@ -48,8 +44,8 @@ resource "aws_iam_role" "scheduler" {
 }
 
 resource "aws_iam_role_policy" "scheduler_sqs" {
-  name   = "scheduler-sqs-send"
-  role   = aws_iam_role.scheduler.id
+  name = "scheduler-sqs-send"
+  role = aws_iam_role.scheduler.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -57,9 +53,68 @@ resource "aws_iam_role_policy" "scheduler_sqs" {
         Effect   = "Allow"
         Action   = "sqs:SendMessage"
         Resource = aws_sqs_queue.schedule_target.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:GenerateDataKey",
+          "kms:Decrypt"
+        ]
+        Resource = aws_kms_key.sqs.arn
       }
     ]
   })
+}
+
+resource "aws_kms_key" "sqs" {
+  description             = "KMS key for SQS queue encryption"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow SQS to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "sqs.amazonaws.com"
+        }
+        Action = [
+          "kms:GenerateDataKey",
+          "kms:Decrypt"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow Scheduler role to use the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = aws_iam_role.scheduler.arn
+        }
+        Action = [
+          "kms:GenerateDataKey",
+          "kms:Decrypt"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_sqs_queue" "schedule_target" {
+  name                              = module.resource_names["sqsqueue"].standard
+  kms_master_key_id                 = aws_kms_key.sqs.arn
+  kms_data_key_reuse_period_seconds = 300
 }
 
 module "scheduler_schedule" {
@@ -72,11 +127,9 @@ module "scheduler_schedule" {
   schedule_expression         = var.schedule_expression
   schedule_expression_timezone = var.schedule_expression_timezone
   description                 = var.description
-  state                       = var.state
-  action_after_completion     = var.action_after_completion
-  start_date                  = var.start_date
+  state        = var.state
+  start_date   = var.start_date
   end_date                    = var.end_date
-  region                      = var.region
   kms_key_arn                 = var.kms_key_arn
 
   flexible_time_window = {
@@ -102,7 +155,7 @@ module "scheduler_schedule" {
 | instance_resource | Instance resource number (0-100) | `number` | n/a | yes |
 | resource_names_map | Map of resource types to naming configuration | `map(object)` | n/a | yes |
 | use_azure_region_abbr | Use Azure region abbreviation in naming | `bool` | `false` | no |
-| schedule_expression | When the schedule runs | `string` | `"rate(1 hour)"` | no |
+| schedule_expression | When the schedule runs | `string` | `"rate(1 minute)"` | no |
 | schedule_expression_timezone | Timezone for scheduling | `string` | `"UTC"` | no |
 | description | Schedule description | `string` | `null` | no |
 | state | ENABLED or DISABLED | `string` | `"ENABLED"` | no |

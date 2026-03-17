@@ -26,7 +26,7 @@ func TestComposableComplete(t *testing.T, ctx types.TestContext) {
 		require.NotEmpty(t, id, "id output must be set")
 		require.NotEmpty(t, arn, "arn output must be set")
 		require.NotEmpty(t, name, "name output must be set")
-		require.NotEmpty(t, groupName, "group_name output must be set")
+		assert.Equal(t, "default", groupName, "group_name should be default in complete example")
 		assert.Equal(t, groupName+"/"+name, id, "id must be group_name/name format for scheduler schedule")
 	})
 
@@ -63,9 +63,10 @@ func TestComposableComplete(t *testing.T, ctx types.TestContext) {
 
 		sqsClient := sqs.NewFromConfig(cfg)
 
-		// Wait up to 2 minutes for the schedule to fire and deliver a message
+		// Wait up to 4 minutes for the schedule to fire and deliver a message.
+		// Scheduler execution can be delayed by eventual consistency.
 		var receivedCount int
-		for i := 0; i < 24; i++ {
+		for i := 0; i < 48; i++ {
 			time.Sleep(5 * time.Second)
 			result, err := sqsClient.ReceiveMessage(context.Background(), &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String(queueURL),
@@ -92,7 +93,7 @@ func TestComposableCompleteReadonly(t *testing.T, ctx types.TestContext) {
 
 		require.NotEmpty(t, id, "id output must be set")
 		require.NotEmpty(t, name, "name output must be set")
-		require.NotEmpty(t, groupName, "group_name output must be set")
+		assert.Equal(t, "default", groupName, "group_name should be default in complete example")
 		assert.Equal(t, groupName+"/"+name, id, "id must be group_name/name format for scheduler schedule")
 		assert.Contains(t, arn, "scheduler", "arn must contain scheduler")
 	})
