@@ -18,10 +18,10 @@ import (
 func TestComposableComplete(t *testing.T, ctx types.TestContext) {
 	t.Run("VerifyTerraformOutputs", func(t *testing.T) {
 		opts := ctx.TerratestTerraformOptions()
-		id := terraform.Output(t, opts, "id")
-		arn := terraform.Output(t, opts, "arn")
-		name := terraform.Output(t, opts, "name")
-		groupName := terraform.Output(t, opts, "group_name")
+		id := terraform.OutputContext(t, context.Background(), opts, "id")
+		arn := terraform.OutputContext(t, context.Background(), opts, "arn")
+		name := terraform.OutputContext(t, context.Background(), opts, "name")
+		groupName := terraform.OutputContext(t, context.Background(), opts, "group_name")
 
 		require.NotEmpty(t, id, "id output must be set")
 		require.NotEmpty(t, arn, "arn output must be set")
@@ -32,9 +32,9 @@ func TestComposableComplete(t *testing.T, ctx types.TestContext) {
 
 	t.Run("VerifyScheduleViaAWSAPI", func(t *testing.T) {
 		opts := ctx.TerratestTerraformOptions()
-		scheduleName := terraform.Output(t, opts, "name")
-		groupName := terraform.Output(t, opts, "group_name")
-		region := terraform.Output(t, opts, "region")
+		scheduleName := terraform.OutputContext(t, context.Background(), opts, "name")
+		groupName := terraform.OutputContext(t, context.Background(), opts, "group_name")
+		region := terraform.OutputContext(t, context.Background(), opts, "region")
 
 		cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(region))
 		require.NoError(t, err)
@@ -54,8 +54,8 @@ func TestComposableComplete(t *testing.T, ctx types.TestContext) {
 
 	t.Run("VerifyScheduleSendsToSQS", func(t *testing.T) {
 		opts := ctx.TerratestTerraformOptions()
-		queueURL := terraform.Output(t, opts, "queue_url")
-		region := terraform.Output(t, opts, "region")
+		queueURL := terraform.OutputContext(t, context.Background(), opts, "queue_url")
+		region := terraform.OutputContext(t, context.Background(), opts, "region")
 		require.NotEmpty(t, queueURL, "queue_url output must be set")
 
 		cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(region))
@@ -86,10 +86,10 @@ func TestComposableComplete(t *testing.T, ctx types.TestContext) {
 func TestComposableCompleteReadonly(t *testing.T, ctx types.TestContext) {
 	t.Run("VerifyTerraformOutputs", func(t *testing.T) {
 		opts := ctx.TerratestTerraformOptions()
-		id := terraform.Output(t, opts, "id")
-		arn := terraform.Output(t, opts, "arn")
-		name := terraform.Output(t, opts, "name")
-		groupName := terraform.Output(t, opts, "group_name")
+		id := terraform.OutputContext(t, context.Background(), opts, "id")
+		arn := terraform.OutputContext(t, context.Background(), opts, "arn")
+		name := terraform.OutputContext(t, context.Background(), opts, "name")
+		groupName := terraform.OutputContext(t, context.Background(), opts, "group_name")
 
 		require.NotEmpty(t, id, "id output must be set")
 		require.NotEmpty(t, name, "name output must be set")
@@ -100,9 +100,9 @@ func TestComposableCompleteReadonly(t *testing.T, ctx types.TestContext) {
 
 	t.Run("VerifyScheduleViaAWSAPI", func(t *testing.T) {
 		opts := ctx.TerratestTerraformOptions()
-		scheduleName := terraform.Output(t, opts, "name")
-		groupName := terraform.Output(t, opts, "group_name")
-		region := terraform.Output(t, opts, "region")
+		scheduleName := terraform.OutputContext(t, context.Background(), opts, "name")
+		groupName := terraform.OutputContext(t, context.Background(), opts, "group_name")
+		region := terraform.OutputContext(t, context.Background(), opts, "region")
 
 		cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(region))
 		require.NoError(t, err)
